@@ -142,11 +142,9 @@ function cut(str, option = {
     if (option.hmm) {
       let temp = ''
       let res = []
-      for (let i = 0; i < result.length; i++) {
+      for (let i = 0,len = result.length; i < len; i++) {
         const str = result[i];
-        if (str.length === 1) {
-          temp += str
-        } else {
+        if(i === len - 1 || str.length !== 1){
           if (temp) {
             res = res.concat(hmm(temp))
             temp = ''
@@ -154,6 +152,8 @@ function cut(str, option = {
           } else {
             res.push(str);
           }
+        }else{
+          temp += str
         }
       }
       return res;
@@ -170,15 +170,15 @@ function cut(str, option = {
 //     str = iconv.decode(data, 'gb18030');
 // }
 // str = str.split('\n')[0]
-var str = '到M1I#$f%123d京研大厦'
+var str = '开发者可以指定自己自定义的词典'
 // console.log(cut(str, {
 //   cutAll: false,
 //   dag: false,
 //   hmm: true, //在cut基础上hmm
 //   cutForSearch: false
 // }))
-// console.log(hmm(str))
+console.log(hmm(str))
 // cut.hmm()
 // cut.dag()  获取有向无环图DAG
 // cut.getTag()  获取词性
-console.log(getTag(str))
+// console.log(getTag(str))

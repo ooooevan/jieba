@@ -11,10 +11,10 @@ const path = require('path');
 const model = fs.readFileSync(path.resolve(__dirname, './hmm_model.utf8')).toString();
 const modelArr = model.split('\n')
 const mini = -3.14e+100
-const B = 'b'
-const E = 'e'
-const M = 'm'
-const S = 's'
+const B = 'B'
+const E = 'E'
+const M = 'M'
+const S = 'S'
 const BEMS = [B, E, M, S] //用于遍历时得到BEMS
 
 const startProb = {} //初始状态概率
@@ -24,6 +24,14 @@ const probTrans = { //转移概率矩阵相应值
   [M]: {},
   [S]: {}
 }
+
+const prevTrans = {   //上一个状态
+  [B]: [E, S],
+  [E]: [B, M],
+  [M]: [B, M],
+  [S]: [E, S]
+}
+
 const data = { //所有字符对应的发射概率
   [B]: {},
   [E]: {},
@@ -63,6 +71,50 @@ dataArr.forEach((item, index) => {
     data[BEMS[index]][word] = +number
   })
 })
+
+function viterbi(str) {
+  let path = {}
+  const V = [{}] //保存概率，一个对象一个字符
+  Object.keys(startProb).forEach(type => {
+    const firstW = str[0]
+    const typeNum = startProb[type]
+    const wordNum = data[type][firstW];
+    V[0][type] = typeNum + wordNum
+    path[type] = [type];
+  })
+
+  for (var i = 1; i < str.length; i++) {
+    V[i] = {}
+    var _w = str[i];
+    newpath = {}
+    Object.keys(probTrans).forEach(当前type => {
+      const __typeArr = prevTrans[当前type]
+      var temp = { //计算哪个概率高和上个type
+        value:'',
+        prev:''
+      };
+      __typeArr.forEach(上个type=>{
+        const 上一个概率 = V[i - 1][上个type]
+        const 这个概率 = 上一个概率 + probTrans[上个type][当前type] + data[当前type][_w]
+        if(!temp.value || 这个概率 > temp.value){
+          temp = {
+            value: 这个概率,
+            prev: 上个type
+          }
+        }
+      })
+      V[i][当前type] = temp.value
+      newpath[当前type] = path[temp.prev] + 当前type
+    })
+    path = newpath
+  }
+
+  const prob = V.pop()
+  let 最后概率,最后类型
+  prob.E > prob.S ? (最后概率 = prob.E, 最后类型 = E):(最后概率 = prob.S, 最后类型 = S)
+  const 最后path = path[最后类型]
+  return {最后概率, 最后path}
+}
 
 // 用递归将字符转换成一颗树形对象
 function getWordTree(str) {
@@ -183,30 +235,51 @@ function getResultStr(conarr) {
 }
 
 
-
-
 function _hmm(str) {
-  if(str.length === 1){
+  if (str.length === 1) {
     return [str]
   }
-  const tranObj = getWordTree(str)
-  var tranArr = recursion(tranObj)
-  var conarr = getAppropriate(tranArr);
-  var printArr = getResultStr(conarr);
-  return printArr
+  let {最后概率, 最后path} = viterbi(str)
+  zpath = 最后path
+  const result = []
+  let temp = ''
+  zpath.split('').forEach((type,idx)=>{
+    switch(type){
+      case B:
+        temp+=str[idx]
+        break;
+      case M:
+        temp+=str[idx]
+        break;
+      case E:
+        result.push(temp + str[idx])
+        temp = ''
+        break;
+      case S:
+        result.push(str[idx])
+        break;
+    }
+  })
+  return result
+
+  // const tranObj = getWordTree(str)
+  // var tranArr = recursion(tranObj)
+  // var conarr = getAppropriate(tranArr);
+  // var printArr = getResultStr(conarr);
+  // return printArr
 }
 
-function hmm(str){
+function hmm(str) {
   const han_reg = /([\u4E00-\u9FD5]+)/;
   const fu_reg = /([a-zA-Z0-9]+(?:\.\d)?)|([0-9]+(?:\.\d)?%?)/;
-  const arr = str.split(han_reg).filter(x=>x);
+  const arr = str.split(han_reg).filter(x => x);
   let result = []
   arr.forEach(ite => {
-    if(ite.match(han_reg)){
+    if (ite.match(han_reg)) {
       result = result.concat(_hmm(ite))
-    }else{
-      const _arr = ite.split(fu_reg).filter(x=>x)
-      _arr.forEach(i=>{
+    } else {
+      const _arr = ite.split(fu_reg).filter(x => x)
+      _arr.forEach(i => {
         result = result.concat(i)
       })
     }
