@@ -1,17 +1,47 @@
 const fs = require('fs');
 const path = require('path');
 const iconv = require('iconv-lite');
+
+
 // jschardet模块可以检测编码
 const {
   getDag,
   getTree
 } = require('./getDag');
 const {
-  hmm,
-  getTag
+  hmm
 } = require('./hmm')
 
+// tag_model
+const dictStr = fs.readFileSync(path.resolve(__dirname, './jieba.dict.utf8')).toString();
+const tagData = dictStr.split('\n');
+
 const log = Math.log;
+
+// 获取词的词性
+function getTag(str) {
+  const arr = cut(str)
+  const resultArr = []
+  arr.forEach(word => {
+    for (let i = 0, len = tagData.length; i < len; i++) {
+      let line = tagData[i]
+      let lineArr = line.split(' ')
+      if (word === lineArr[0]) {
+        resultArr.push({
+          word,
+          tag: lineArr.pop()
+        })
+        return;
+      }
+    }
+    // 执行到这里说明库中没有词
+    resultArr.push({
+      word,
+      tag: 'x'
+    })
+  })
+  return resultArr;
+}
 
 // 找出基于词频的最大切分组合
 function cut(str, option = {
@@ -109,6 +139,25 @@ function cut(str, option = {
       })
       return searchResult;
     }
+    if (option.hmm) {
+      let temp = ''
+      let res = []
+      for (let i = 0; i < result.length; i++) {
+        const str = result[i];
+        if (str.length === 1) {
+          temp += str
+        } else {
+          if (temp) {
+            res = res.concat(hmm(temp))
+            temp = ''
+            res.push(str);
+          } else {
+            res.push(str);
+          }
+        }
+      }
+      return res;
+    }
     return result;
   }
 }
@@ -121,14 +170,15 @@ function cut(str, option = {
 //     str = iconv.decode(data, 'gb18030');
 // }
 // str = str.split('\n')[0]
-var str = '我是拖拉机学院手扶拖拉机专业的。不用多久，我就会升职加薪，当上CEO，走上人生巅峰。'
-console.log(cut(str, {
-  cutAll: false,
-  dag: false,
-  hmm: true, //在cut基础上hmm
-  cutForSearch: false
-}))
+var str = '到M1I#$f%123d京研大厦'
+// console.log(cut(str, {
+//   cutAll: false,
+//   dag: false,
+//   hmm: true, //在cut基础上hmm
+//   cutForSearch: false
+// }))
 // console.log(hmm(str))
 // cut.hmm()
 // cut.dag()  获取有向无环图DAG
 // cut.getTag()  获取词性
+console.log(getTag(str))

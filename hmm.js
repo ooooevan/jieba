@@ -6,9 +6,6 @@
 const fs = require('fs');
 const path = require('path');
 
-// tag_model
-const dictStr = fs.readFileSync(path.resolve(__dirname, './jieba.dict.utf8')).toString();
-const tagData = dictStr.split('\n');
 
 // hmm_model
 const model = fs.readFileSync(path.resolve(__dirname, './hmm_model.utf8')).toString();
@@ -71,9 +68,6 @@ dataArr.forEach((item, index) => {
 function getWordTree(str) {
   const result = {};
   let wordWord = str[0];
-  if (!wordWord) {
-    return;
-  }
   // 首字符计算概率，不可能出现，则概率为：-3.14e+100
   Object.keys(startProb).forEach(type => {
     const typeNum = startProb[type]
@@ -188,41 +182,38 @@ function getResultStr(conarr) {
   return printArr
 }
 
-// 获取词的词性
-function getTag(arr) {
-  const resultArr = []
-  arr.forEach(word => {
-    for (let i = 0, len = tagData.length; i < len; i++) {
-      let line = tagData[i]
-      let lineArr = line.split(' ')
-      if (word === lineArr[0]) {
-        resultArr.push({
-          word,
-          tag: lineArr.pop()
-        })
-        return;
-      }
-    }
-    // 执行到这里说明库中没有词
-    resultArr.push({
-      word,
-      tag: 'x'
-    })
-  })
-  return resultArr;
-}
 
 
-function hmm(str) {
+
+function _hmm(str) {
+  if(str.length === 1){
+    return [str]
+  }
   const tranObj = getWordTree(str)
   var tranArr = recursion(tranObj)
   var conarr = getAppropriate(tranArr);
   var printArr = getResultStr(conarr);
   return printArr
 }
-// const tagArr = getTag(printArr)
-// console.log(tagArr)
+
+function hmm(str){
+  const han_reg = /([\u4E00-\u9FD5]+)/;
+  const fu_reg = /([a-zA-Z0-9]+(?:\.\d)?)|([0-9]+(?:\.\d)?%?)/;
+  const arr = str.split(han_reg).filter(x=>x);
+  let result = []
+  arr.forEach(ite => {
+    if(ite.match(han_reg)){
+      result = result.concat(_hmm(ite))
+    }else{
+      const _arr = ite.split(fu_reg).filter(x=>x)
+      _arr.forEach(i=>{
+        result = result.concat(i)
+      })
+    }
+  })
+  return result
+}
+
 module.exports = {
-  hmm,
-  getTag
+  hmm
 }
