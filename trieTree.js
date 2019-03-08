@@ -1,8 +1,4 @@
-// const fs = require('fs');
-// const path = require('path');
 const Node = require('./node');
-// const fileString = fs.readFileSync(path.resolve(__dirname, './jieba.dict.utf8')).toString();
-// const lineArr = fileString.split('\n').filter(s => s);
 
 class standardTrie {
   constructor() {
