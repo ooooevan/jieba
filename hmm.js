@@ -25,7 +25,7 @@ const probTrans = { //转移概率矩阵相应值
   [S]: {}
 }
 
-const prevTrans = {   //上一个状态
+const prevTrans = { //上一个状态
   [B]: [E, S],
   [E]: [B, M],
   [M]: [B, M],
@@ -72,48 +72,50 @@ dataArr.forEach((item, index) => {
   })
 })
 
-function viterbi(str) {
-  let path = {}
+function viterbi(sentence) {
   const V = [{}] //保存概率，一个对象一个字符
+  let path = {} //保存每种计算过概率的路径
   Object.keys(startProb).forEach(type => {
-    const firstW = str[0]
-    const typeNum = startProb[type]
-    const wordNum = data[type][firstW];
-    V[0][type] = typeNum + wordNum
+    const firstW = sentence[0]
+    const typeProb = startProb[type]
+    const wordProb = data[type][firstW];
+    V[0][type] = typeProb + wordProb
     path[type] = [type];
   })
 
-  for (var i = 1; i < str.length; i++) {
+  for (var i = 1; i < sentence.length; i++) {
     V[i] = {}
-    var _w = str[i];
-    newpath = {}
-    Object.keys(probTrans).forEach(当前type => {
-      const __typeArr = prevTrans[当前type]
+    var word = sentence[i];
+    let newpath = {}
+    Object.keys(probTrans).forEach(curType => {
+      const prevTypeArr = prevTrans[curType]
       var temp = { //计算哪个概率高和上个type
-        value:'',
-        prev:''
+        prob: '',
+        prevType: ''
       };
-      __typeArr.forEach(上个type=>{
-        const 上一个概率 = V[i - 1][上个type]
-        const 这个概率 = 上一个概率 + probTrans[上个type][当前type] + data[当前type][_w]
-        if(!temp.value || 这个概率 > temp.value){
+      prevTypeArr.forEach(prevType => {
+        const prevProb = V[i - 1][prevType]
+        const curProb = prevProb + probTrans[prevType][curType] + data[curType][word]
+        if (!temp.prob || curProb > temp.prob) {
           temp = {
-            value: 这个概率,
-            prev: 上个type
+            value: curProb,
+            prevType: prevType
           }
         }
       })
-      V[i][当前type] = temp.value
-      newpath[当前type] = path[temp.prev] + 当前type
+      V[i][curType] = temp.prob
+      newpath[curType] = path[temp.prevType] + curType
     })
     path = newpath
   }
-
-  const prob = V.pop()
-  let 最后概率,最后类型
-  prob.E > prob.S ? (最后概率 = prob.E, 最后类型 = E):(最后概率 = prob.S, 最后类型 = S)
-  const 最后path = path[最后类型]
-  return {最后概率, 最后path}
+  const lastProb = V.pop() //最后一个字符计算出的不同type的概率，找出最合适的一个
+  let correctProb, correctType
+  lastProb.E > lastProb.S ? (correctProb = lastProb.E, correctType = E) : (correctProb = lastProb.S, correctType = S)
+  const correctPath = path[correctType]
+  return {
+    correctProb,
+    correctPath
+  }
 }
 
 // 用递归将字符转换成一颗树形对象
@@ -163,93 +165,23 @@ function getWordTree(str) {
   return result;
 }
 
-// 将树形对象转换成所有的路径
-function recursion(tree) {
-  const ll = []
-  Object.keys(tree).forEach(key => {
-    var temp = tree[key];
-    var arr = [].concat({
-      type: temp.type,
-      value: temp.value,
-      string: temp.string
-    });
-    return _recursion(temp, arr);
-  })
-
-  function _recursion(obj, initArr) {
-    Object.keys(obj.next).forEach(key => {
-      var temp = obj.next[key];
-      var currentArr = initArr.concat({
-        type: temp.type,
-        value: temp.value,
-        string: temp.string
-      })
-      if (!temp.next) {
-        ll.push(currentArr)
-      } else {
-        _recursion(temp, currentArr);
-      }
-    })
-  }
-  return ll
-}
-
-// 选取最合适的路径
-function getAppropriate(tranArr) {
-  // 过滤不符合逻辑的情况，如最后一个是B、M
-  tranArr = tranArr.filter(arr => {
-    const last = arr[arr.length - 1];
-    return last.type === E || last.type === S
-  })
-  const calArr = tranArr.map(arr => {
-    arr.cal = arr.reduce((prev, next) => {
-      return prev + next.value
-    }, 0)
-    return arr
-  })
-  // 和最小的是最恰当的
-  calArr.sort((a, b) => {
-    return b.cal - a.cal
-  })
-  return calArr[0];
-}
-
-function getResultStr(conarr) {
-  // 输出HMM结果
-  const printArr = [];
-  let tempstr = ''
-  conarr.forEach(it => {
-    if (it.type === B) {
-      tempstr = it.string;
-    } else if (it.type === E) {
-      tempstr += it.string
-      printArr.push(tempstr);
-      tempstr = ''
-    } else if (it.type === M) {
-      tempstr += it.string
-    } else {
-      printArr.push(it.string)
-    }
-  })
-  return printArr
-}
-
-
 function _hmm(str) {
   if (str.length === 1) {
     return [str]
   }
-  let {最后概率, 最后path} = viterbi(str)
-  zpath = 最后path
+  let {
+    correctProb,
+    correctPath
+  } = viterbi(str)
   const result = []
   let temp = ''
-  zpath.split('').forEach((type,idx)=>{
-    switch(type){
+  correctPath.split('').forEach((type, idx) => {
+    switch (type) {
       case B:
-        temp+=str[idx]
+        temp += str[idx]
         break;
       case M:
-        temp+=str[idx]
+        temp += str[idx]
         break;
       case E:
         result.push(temp + str[idx])
@@ -261,12 +193,6 @@ function _hmm(str) {
     }
   })
   return result
-
-  // const tranObj = getWordTree(str)
-  // var tranArr = recursion(tranObj)
-  // var conarr = getAppropriate(tranArr);
-  // var printArr = getResultStr(conarr);
-  // return printArr
 }
 
 function hmm(str) {

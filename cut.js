@@ -170,7 +170,7 @@ function cut(str, option = {
 //     str = iconv.decode(data, 'gb18030');
 // }
 // str = str.split('\n')[0]
-var str = '开发者可以指定自己自定义的词典'
+var str = '程序员'
 // console.log(cut(str, {
 //   cutAll: false,
 //   dag: false,
