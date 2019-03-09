@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "repository": "https://github.com/ooooevan/ooooevan-jieba.git",
+  "repository": "https://github.com/ooooevan/jieba.git",
   "author": "ooooevan@163.com",
   "license": "ISC"
 }

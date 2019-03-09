@@ -336,15 +336,15 @@ class Cut {
       Object.keys(this.transProb).forEach(curType => {
         const prevTypeArr = this.prevTrans[curType]
         var temp = { //计算哪个概率高和上个type
-          prob: '',
+          prob: -3.14e+100,
           prevType: ''
         };
         prevTypeArr.forEach(prevType => {
           const prevProb = V[i - 1][prevType]
           const curProb = prevProb + this.transProb[prevType][curType] + this.emitProb[curType][word]
-          if (!temp.prob || curProb > temp.prob) {
+          if (temp.prob === -3.14e+100 || curProb > temp.prob) {
             temp = {
-              value: curProb,
+              prob: curProb,
               prevType: prevType
             }
           }

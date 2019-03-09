@@ -11,7 +11,7 @@ var str = '程序员'
 // console.log(path.resolve( './jieba1.dict.utf8'))
 
 
-myjieba.load({
-  dict: './jieba1.dict.utf8',
-})
-console.log(myjieba.cut(str))
+// myjieba.load({
+//   dict: './jieba1.dict.utf8',
+// })
+console.log(myjieba.cutHMM(str))
