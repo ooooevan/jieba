@@ -54,31 +54,27 @@ class Cut {
     const model = fs.readFileSync(this.hmmDictPath).toString();
     const modelArr = model.split('\n')
 
-    const B = 'B'
-    const E = 'E'
-    const M = 'M'
-    const S = 'S'
-    const BEMS = [B, E, M, S] //用于遍历时得到BEMS
+    const BEMS = ['B', 'E', 'M', 'S'] //用于遍历时得到BEMS
 
     this.startProb = {} //初始状态概率
     this.transProb = { //转移概率矩阵相应值
-      [B]: {},
-      [E]: {},
-      [M]: {},
-      [S]: {}
+      'B': {},
+      'E': {},
+      'M': {},
+      'S': {}
     }
     this.prevTrans = { //上一个状态
-      [B]: [E, S],
-      [E]: [B, M],
-      [M]: [B, M],
-      [S]: [E, S]
+      'B': ['E', 'S'],
+      'E': ['B', 'M'],
+      'M': ['B', 'M'],
+      'S': ['E', 'S']
     }
 
     this.emitProb = { //所有字符对应的发射概率
-      [B]: {},
-      [E]: {},
-      [M]: {},
-      [S]: {}
+      'B': {},
+      'E': {},
+      'M': {},
+      'S': {}
     }
     // 获取初始状态概率
     const startIndex = modelArr.findIndex(item => {
@@ -282,7 +278,7 @@ class Cut {
     let result = []
     arr.forEach(it => {
       if (it.match(han_reg)) {
-        result = result.concat(_cutHMM(it))
+        result = result.concat(this._cutHMM(it))
       } else {
         const _arr = it.split(fu_reg).filter(x => x)
         _arr.forEach(i => {
@@ -300,22 +296,22 @@ class Cut {
     let {
       correctProb,
       correctPath
-    } = _viterbi(str)
+    } = this._viterbi(str)
     const result = []
     let temp = ''
     correctPath.split('').forEach((type, idx) => {
       switch (type) {
-        case B:
+        case 'B':
           temp += str[idx]
           break;
-        case M:
+        case 'M':
           temp += str[idx]
           break;
-        case E:
+        case 'E':
           result.push(temp + str[idx])
           temp = ''
           break;
-        case S:
+        case 'S':
           result.push(str[idx])
           break;
       }
@@ -360,7 +356,7 @@ class Cut {
     }
     const lastProb = V.pop() //最后一个字符计算出的不同type的概率，找出最合适的一个
     let correctProb, correctType
-    lastProb.E > lastProb.S ? (correctProb = lastProb.E, correctType = E) : (correctProb = lastProb.S, correctType = S)
+    lastProb.E > lastProb.S ? (correctProb = lastProb.E, correctType = 'E') : (correctProb = lastProb.S, correctType = 'S')
     const correctPath = path[correctType]
     return {
       correctProb,

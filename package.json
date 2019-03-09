@@ -1,16 +1,13 @@
 {
   "name": "ooooevan-jieba",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "test my jieba module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
+  "repository": "https://github.com/ooooevan/ooooevan-jieba.git",
   "author": "ooooevan@163.com",
-  "license": "ISC",
-  "dependencies": {
-    "iconv-lite": "^0.4.24",
-    "nodejieba": "^2.3.0"
-  }
+  "license": "ISC"
 }
