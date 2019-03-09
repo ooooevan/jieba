@@ -3,7 +3,7 @@ const path = require('path');
 const Trie = require('./trieTree');
 
 
-const iconv = require('iconv-lite');
+// const iconv = require('iconv-lite');
 // jschardet模块可以检测编码
 
 const log = Math.log;
@@ -12,23 +12,33 @@ class Cut {
   constructor() {
     this._loaded = false
     this.DEFAULT_DICT_ITEM = {
-      dict: './dict/jieba.dict.utf8',
-      hmmDict: './dict/hmm_model.utf8',
-      idfDict: './dict/idf.utf8',
-      userDict: './user.txt',
-      stopWordDict: './dict/stop_words.utf8'
+      dict: __dirname + '/dict/jieba.dict.utf8',
+      hmmDict: __dirname + '/dict/hmm_model.utf8',
+      idfDict: __dirname + '/dict/idf.utf8',
+      userDict: __dirname + '/user.txt',
+      stopWordDict: __dirname + '/dict/stop_words.utf8'
     }
-    this.USER_DICT = './user.txt'
+    this.USER_DICT = '/user.txt'
   }
   checkLoad() {
     if (!this._loaded) {
       this.load()
     }
   }
+  // load(options){
+
+  // }
   load(options) {
+    // let ffs = fs
+    // let ppath = path
     // let a = __dirname
-    // let aa = __dirname
+    // let f = process
+    // let aa = __filename
+    // console.log('  ',__dirname)
+    // console.log('  ',process.cwd())
+    // console.log('  ',__filename)
     options = Object.assign(this.DEFAULT_DICT_ITEM, options)
+    // console.log('  ',options)
     this.dictPath = options.dict
     this.hmmDictPath = options.hmmDict
     this.userDictPath = options.userDict
@@ -41,7 +51,7 @@ class Cut {
     this._loaded = true
   }
   _initProbability() {
-    const model = fs.readFileSync(path.resolve(__dirname, this.hmmDictPath)).toString();
+    const model = fs.readFileSync(this.hmmDictPath).toString();
     const modelArr = model.split('\n')
 
     const B = 'B'
@@ -103,7 +113,15 @@ class Cut {
     })
   }
   _getTree() {
-    const fileString = fs.readFileSync(path.resolve(__dirname, this.dictPath)).toString();
+    let ffs = fs
+    let ppath = path
+    let a = __dirname
+    let f = process
+    let aa = __filename
+    console.log('  ',__dirname)
+    console.log('  ',process.cwd())
+    console.log('  ',__filename)
+    const fileString = fs.readFileSync(this.dictPath).toString();
     const lineArr = fileString.split('\n').filter(s => s);
     const Tree = new Trie();
     Tree.insertArr(lineArr)
