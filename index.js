@@ -25,20 +25,8 @@ class Cut {
       this.load()
     }
   }
-  // load(options){
-
-  // }
   load(options) {
-    // let ffs = fs
-    // let ppath = path
-    // let a = __dirname
-    // let f = process
-    // let aa = __filename
-    // console.log('  ',__dirname)
-    // console.log('  ',process.cwd())
-    // console.log('  ',__filename)
     options = Object.assign(this.DEFAULT_DICT_ITEM, options)
-    // console.log('  ',options)
     this.dictPath = options.dict
     this.hmmDictPath = options.hmmDict
     this.userDictPath = options.userDict
@@ -109,14 +97,6 @@ class Cut {
     })
   }
   _getTree() {
-    let ffs = fs
-    let ppath = path
-    let a = __dirname
-    let f = process
-    let aa = __filename
-    console.log('  ',__dirname)
-    console.log('  ',process.cwd())
-    console.log('  ',__filename)
     const fileString = fs.readFileSync(this.dictPath).toString();
     const lineArr = fileString.split('\n').filter(s => s);
     const Tree = new Trie();
@@ -195,20 +175,38 @@ class Cut {
         result.push(word)
         i += wordLen - 1;
       }
+      let hmmResult = []
+      let hmmTemp = ''
+      for (let i = 0, len = result.length; i < len; i++) {
+        const str = result[i];
+        if (i === len - 1 || str.length !== 1) {
+          if (hmmTemp) {
+            hmmResult = hmmResult.concat(this.cutHMM(hmmTemp))
+            hmmTemp = ''
+            hmmResult.push(str);
+          } else {
+            hmmResult.push(str);
+          }
+        } else {
+          hmmTemp += str
+        }
+      }
       if (options.cutForSearch) {
         const searchResult = []
-        result.forEach(it => {
+        hmmResult.forEach(it => {
           const len = it.length
           if (len > 2) {
             for (let i = 0; i < len - 1; i++) {
               const _it = it.slice(i, i + 2)
-              if (this.tireTree.findWord(_it)) searchResult.push(_it);
+              const _temp = this.tireTree.findWord(_it)
+              if (_temp && _temp.bound) searchResult.push(_it);
             }
           }
           if (len > 3) {
             for (let i = 0; i < len - 1; i++) {
               const _it = it.slice(i, i + 3)
-              if (this.tireTree.findWord(_it)) searchResult.push(_it);
+              const _temp = this.tireTree.findWord(_it)
+              if (_temp && _temp.bound) searchResult.push(_it);
             }
           }
           searchResult.push(it);
@@ -216,23 +214,7 @@ class Cut {
         return searchResult;
       }
       if (options.hmm) {
-        let temp = ''
-        let res = []
-        for (let i = 0, len = result.length; i < len; i++) {
-          const str = result[i];
-          if (i === len - 1 || str.length !== 1) {
-            if (temp) {
-              res = res.concat(this.cutHMM(temp))
-              temp = ''
-              res.push(str);
-            } else {
-              res.push(str);
-            }
-          } else {
-            temp += str
-          }
-        }
-        return res;
+        return hmmResult;
       }
       return result;
     }
@@ -271,20 +253,40 @@ class Cut {
   cutHMM(str) {
     this.checkLoad()
 
-    const han_reg = /([\u4E00-\u9FD5]+)/;
-    const fu_reg = /([a-zA-Z0-9]+(?:\.\d)?)|([0-9]+(?:\.\d)?%?)/;
+    /* 目前正则匹配还不完整，很多没用到，可能有错 */
+    const re_userdict = /^(.+?)( [0-9]+)?( [a-z]+)?$/
+    const re_eng = /[a-zA-Z0-9]/
+    const re_han_default = /([\u4E00-\u9FD5a-zA-Z0-9+#&\._%]+)/
+    const re_skip_default = /(\r\n|\s)/
+    const re_han_cut_all = /([\u4E00-\u9FD5]+)/
+    const re_skip_cut_all = /[^a-zA-Z0-9+#\n]/
 
-    const arr = str.split(han_reg).filter(x => x);
+    const han_reg = /([\u4E00-\u9FD5]+)/;
+    const seg_reg = /([a-zA-Z0-9]+(?:\.\d)?)|([0-9]+(?:\.\d)?%?)/;
+
+    const arr = str.split(re_han_default).filter(x => x);
     let result = []
     arr.forEach(it => {
-      if (it.match(han_reg)) {
-        result = result.concat(this._cutHMM(it))
-      } else {
-        const _arr = it.split(fu_reg).filter(x => x)
-        _arr.forEach(i => {
-          result = result.concat(i)
-        })
-      }
+      if (it == '当上CEO') debugger
+      it.split(re_han_cut_all).filter(x => x).forEach(i => {
+        if (i.match(han_reg)) {
+          result = result.concat(this._cutHMM(i))
+        } else {
+          const _arr = i.split(re_skip_default).filter(x => x)
+          _arr.forEach(i => {
+            if (i.match(re_han_default)) {
+              result = result.concat(i)
+            } else if (re_skip_default.test(i)) {
+              result = result.concat(i)
+            } else {
+              // 
+              for (let xx of i) {
+                result = result.concat(xx)
+              }
+            }
+          })
+        }
+      })
     })
 
     return result
@@ -369,13 +371,13 @@ class Cut {
       cutAll: true
     })
   }
-  cutForSearch() {
+  cutForSearch(str) {
     this.checkLoad()
     return this.cut(str, {
       cutForSearch: true
     })
   }
-  tag() {
+  tag(str) {
     this.checkLoad()
     const arr = this.cut(str)
     const resultArr = []
@@ -388,6 +390,10 @@ class Cut {
     })
     return resultArr;
   }
+  insertWord(w, number = 1, tag = 'x'){
+    this.checkLoad();
+    this.tireTree.insertArr([w + ' ' + number + ' ' +tag])
+  }
 }
 // var data = fs.readFileSync(path.resolve(__dirname, './user.txt'))
 
@@ -397,20 +403,21 @@ class Cut {
 //     str = iconv.decode(data, 'gb18030');
 // }
 // str = str.split('\n')[0]
-var str = '程序员'
+// var str = "男默女泪";
 // console.log(new Cut().cut(str, {
 //   cutAll: false,
 //   dag: true, //获取dag图
 //   hmm: true, //在cut基础上hmm
 //   cutForSearch: false
 // }))
-// console.log(new Cut().tag(str))  //获取词性
-// console.log(new Cut().cutAll(str))  //获取词性
-// console.log(new Cut().cutForSearch(str))  //获取词性
-// var cc = new Cut();
+// console.log(new Cut().tag(str))
+// console.log(new Cut().cutAll(str))
+// console.log(new Cut().cutForSearch(str))
+var cc = new Cut();
 // cc.load({
 //   dict: './jieba.dict.utf8',
 // })
 // console.log(cc.cut(str))
-
-module.exports = new Cut()
+// cc.insertWord('男默女泪')
+// console.log(cc.cut(str))
+module.exports = Cut

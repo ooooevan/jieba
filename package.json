@@ -9,5 +9,8 @@
   "keywords": [],
   "repository": "https://github.com/ooooevan/jieba.git",
   "author": "ooooevan@163.com",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "ava": "^1.3.1"
+  }
 }
