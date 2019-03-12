@@ -15,10 +15,9 @@ class Cut {
       dict: __dirname + '/dict/jieba.dict.utf8',
       hmmDict: __dirname + '/dict/hmm_model.utf8',
       idfDict: __dirname + '/dict/idf.utf8',
-      userDict: __dirname + '/user.txt',
+      userDict: __dirname + '/dict/user.txt',
       stopWordDict: __dirname + '/dict/stop_words.utf8'
     }
-    this.USER_DICT = '/user.txt'
   }
   checkLoad() {
     if (!this._loaded) {
@@ -97,10 +96,13 @@ class Cut {
     })
   }
   _getTree() {
-    const fileString = fs.readFileSync(this.dictPath).toString();
-    const lineArr = fileString.split('\n').filter(s => s);
+    const dictString = fs.readFileSync(this.dictPath).toString();
+    const dictlineArr = dictString.split('\n').filter(s => s);
+    const userDictString = fs.readFileSync(this.userDictPath).toString();
+    const userDictlineArr = userDictString.split('\n').filter(s => s);
     const Tree = new Trie();
-    Tree.insertArr(lineArr)
+    Tree.insertArr(dictlineArr)
+    Tree.insertArr(userDictlineArr)
     return Tree;
   }
   cut(str, options = {
@@ -390,34 +392,15 @@ class Cut {
     })
     return resultArr;
   }
-  insertWord(w, number = 1, tag = 'x'){
+  insertWord(w, number = 1, tag = 'x') {
     this.checkLoad();
-    this.tireTree.insertArr([w + ' ' + number + ' ' +tag])
+    this.tireTree.insertArr([w + ' ' + number + ' ' + tag])
   }
 }
-// var data = fs.readFileSync(path.resolve(__dirname, './user.txt'))
 
-// var str = iconv.decode(data, 'utf-8');
-// // 编码不对试着用GBK编码
-// if(str.indexOf('�') != -1){
-//     str = iconv.decode(data, 'gb18030');
-// }
-// str = str.split('\n')[0]
-// var str = "男默女泪";
-// console.log(new Cut().cut(str, {
-//   cutAll: false,
-//   dag: true, //获取dag图
-//   hmm: true, //在cut基础上hmm
-//   cutForSearch: false
-// }))
-// console.log(new Cut().tag(str))
-// console.log(new Cut().cutAll(str))
-// console.log(new Cut().cutForSearch(str))
-var cc = new Cut();
-// cc.load({
-//   dict: './jieba.dict.utf8',
-// })
-// console.log(cc.cut(str))
-// cc.insertWord('男默女泪')
-// console.log(cc.cut(str))
+// var sentence = "我是拖拉机学院手扶拖拉机专业的。不用多久，我就会升职加薪，当上CEO，走上人生巅峰。";
+// myjieba = new Cut()
+// const res = myjieba.tag(sentence);
+// console.log(res)
+
 module.exports = Cut

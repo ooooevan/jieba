@@ -1,11 +1,7 @@
 const test = require('ava');
 const Myjieba = require('../index')
-const path = require('path')
 const myjieba = new Myjieba()
 
-// myjieba.load({
-//   dict: './jieba1.dict.utf8',
-// })
 
 test("const res = myjieba.cut('南京市长江大桥')", t => {
   const res = myjieba.cut('南京市长江大桥');
@@ -292,14 +288,14 @@ test('insertWord("男默女泪")', t => {
   t.deepEqual(res1, ['男默女泪']);
 })
 
-// test('insertWord("区块链")', t => {
-//   const str = '区块链'
-//   myjieba.load({
-//     userDict: './user.txt',
-//   });
-//   const res1 = myjieba.cut(str)
-//   t.deepEqual(res1, ['区块链']);
-// })
+test('insertWord("月欠族")', t => {
+  const str = '月欠族'
+  myjieba.load({
+    userDict: __dirname + '/user.txt',
+  });
+  const res1 = myjieba.cut(str)
+  t.deepEqual(res1, ['月欠族']);
+})
 
 // test('myjieba.cut("访问www.baidu.com进行搜索")', t => {
 //   const res = myjieba.cut("访问www.baidu.com进行搜索")

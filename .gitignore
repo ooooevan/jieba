@@ -1,3 +1,13 @@
 node_modules/
 package-lock.json
 
+# 快照
+*.heapsnapshot
+
+# heapprofile
+*.heapprofile
+
+# nyc、coveralls的结果文件
+.nyc_output/
+coverage/
+
