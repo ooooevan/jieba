@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const Trie = require('./trieTree');
+const Dict = require('./dict');
 
 
 // const iconv = require('iconv-lite');
@@ -32,7 +32,7 @@ class Cut {
     this.idfDictPath = options.idfDict
     this.stopWordDictPath = options.stopWordDict
 
-    this.tireTree = this._getTree();
+    this.dict = this._getTree();
     this._initProbability();
 
     this._loaded = true
@@ -100,10 +100,10 @@ class Cut {
     const dictlineArr = dictString.split('\n').filter(s => s);
     const userDictString = fs.readFileSync(this.userDictPath).toString();
     const userDictlineArr = userDictString.split('\n').filter(s => s);
-    const Tree = new Trie();
-    Tree.insertArr(dictlineArr)
-    Tree.insertArr(userDictlineArr)
-    return Tree;
+    const dict = new Dict();
+    dict.insertArr(dictlineArr)
+    dict.insertArr(userDictlineArr)
+    return dict;
   }
   cut(str, options = {
     cutAll: false,
@@ -153,8 +153,8 @@ class Cut {
         for (let j = 0, len = arr.length; j < len; j++) {
           let _i = arr[j];
           let _w = str.slice(i, _i + 1);
-          const _node = this.tireTree.findWord(_w) || this.tireTree;
-          let number = (log(_node.number) || 1) - log(this.tireTree.total) + route[_i + 1]['number'];
+          const num = this.dict.root[_w] < 1 ? undefined : this.dict.root[_w];
+          let number = (log(num) || 1) - log(this.dict.total) + route[_i + 1]['number'];
           temp.push({
             number,
             to: _i
@@ -200,15 +200,15 @@ class Cut {
           if (len > 2) {
             for (let i = 0; i < len - 1; i++) {
               const _it = it.slice(i, i + 2)
-              const _temp = this.tireTree.findWord(_it)
-              if (_temp && _temp.bound) searchResult.push(_it);
+              const _temp = this.dict.root[_it]
+              if (_temp > 0) searchResult.push(_it);
             }
           }
           if (len > 3) {
             for (let i = 0; i < len - 1; i++) {
               const _it = it.slice(i, i + 3)
-              const _temp = this.tireTree.findWord(_it)
-              if (_temp && _temp.bound) searchResult.push(_it);
+              const _temp = this.dict.root[_it]
+              if (_temp >0) searchResult.push(_it);
             }
           }
           searchResult.push(it);
@@ -222,33 +222,28 @@ class Cut {
     }
   }
   getDag(str) {
+    this.checkLoad()
     const DAG = {}
-    let wNode;
     for (let i = 0, len = str.length; i < len; i++) {
       const w = str[i];
-      wNode = wNode || this.tireTree.find(w)
+      const wNode = this.dict.root[w]
       if (!DAG[i]) {
         DAG[i] = [i] //每个词都可以是single
       }
-      if (!wNode) {
+      if (wNode < 1) {
         // 遇到库中没有的特殊字符，或空格
         continue;
       }
-      getNext(wNode, i + 1, i, len);
-      wNode = null;
-    }
-    // index：到哪个字结束
-    // startIndex：从哪个字开始
-    function getNext(node, index, startIndex, len) {
-      let w = str[index];
-      let wNode;
-      wNode = node.find(w);
-      if (wNode) {
-        if (wNode.bound) {
-          DAG[startIndex].push(index);
+      for (let j = i + 1; j < len; j++) {
+        const _W = str.slice(i, j + 1);
+        const _wNode = this.dict.root[_W]
+        if (_wNode > 0) {
+          DAG[i].push(j)
+        } else if (_wNode === undefined) {
+          break;
         }
-        getNext(wNode, index + 1, startIndex, len);
       }
+
     }
     return DAG;
   }
@@ -269,7 +264,6 @@ class Cut {
     const arr = str.split(re_han_default).filter(x => x);
     let result = []
     arr.forEach(it => {
-      if (it == '当上CEO') debugger
       it.split(re_han_cut_all).filter(x => x).forEach(i => {
         if (i.match(han_reg)) {
           result = result.concat(this._cutHMM(i))
@@ -384,7 +378,7 @@ class Cut {
     const arr = this.cut(str)
     const resultArr = []
     arr.forEach(word => {
-      const _Node = this.tireTree.findWord(word) || {}
+      const _Node = this.dict.root[word] || {}
       resultArr.push({
         word,
         tag: _Node.tag || 'x'
@@ -394,13 +388,17 @@ class Cut {
   }
   insertWord(w, number = 1, tag = 'x') {
     this.checkLoad();
-    this.tireTree.insertArr([w + ' ' + number + ' ' + tag])
+    this.dict.insertArr([w + ' ' + number + ' ' + tag])
   }
 }
+// var one= process.memoryUsage()
 
 // var sentence = "我是拖拉机学院手扶拖拉机专业的。不用多久，我就会升职加薪，当上CEO，走上人生巅峰。";
-// myjieba = new Cut()
-// const res = myjieba.tag(sentence);
+// const myjieba = new Cut()
+// const res = myjieba.cut(sentence);
 // console.log(res)
+
+// var two = process.memoryUsage()
+// console.log(two.heapUsed - one.heapUsed)
 
 module.exports = Cut

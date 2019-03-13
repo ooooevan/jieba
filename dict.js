@@ -1,12 +1,11 @@
 const Node = require('./node');
 
-class standardTrie {
+class Dict {
   constructor() {
-    this.root = new Node('');
+    this.root = {};
     this.total = 0;
   }
   insertArr(arr) {
-    // [ '云计算', '韩玉鉴赏', '蓝翔 nz', '区块链 10 nz' ]
     const numberReg = /^[0-9]+$/
     arr.forEach(line => {
       const arr = line.split(' ')
@@ -18,17 +17,22 @@ class standardTrie {
     })
   }
   insert(word, number, tag) {
-    this.root.addWord(word, number, tag);
+    for (let i = 0, len = word.length; i < len; i++) {
+      let w = word.slice(0, i + 1);
+      if (!this.root[w]) {
+        this.root[w] = 0
+      }
+      if (i === len - 1) {
+        this.root[w] = number
+      }
+    }
   }
   getTree() {
     return this.root;
   }
-  find(w) {
-    return this.root.find(w);
-  }
-  findWord(w){
+  findWord(w) {
     return this.root.findWord(w);
   }
 }
 
-module.exports = standardTrie
+module.exports = Dict

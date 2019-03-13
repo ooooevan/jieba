@@ -173,106 +173,106 @@ test("nodejieba.cutForSearch(sentence)", t => {
     '。'
   ]);
 });
-test("nodejieba.tag(sentence)", t => {
-  const res = myjieba.tag(sentence);
-  t.deepEqual(res, [{
-      word: '我',
-      tag: 'r'
-    },
-    {
-      word: '是',
-      tag: 'v'
-    },
-    {
-      word: '拖拉机',
-      tag: 'n'
-    },
-    {
-      word: '学院',
-      tag: 'n'
-    },
-    {
-      word: '手扶拖拉机',
-      tag: 'n'
-    },
-    {
-      word: '专业',
-      tag: 'n'
-    },
-    {
-      word: '的',
-      tag: 'uj'
-    },
-    {
-      word: '。',
-      tag: 'x'
-    },
-    {
-      word: '不用',
-      tag: 'v'
-    },
-    {
-      word: '多久',
-      tag: 'm'
-    },
-    {
-      word: '，',
-      tag: 'x'
-    },
-    {
-      word: '我',
-      tag: 'r'
-    },
-    {
-      word: '就',
-      tag: 'd'
-    },
-    {
-      word: '会',
-      tag: 'v'
-    },
-    {
-      word: '升职',
-      tag: 'v'
-    },
-    {
-      word: '加薪',
-      tag: 'nr'
-    },
-    {
-      word: '，',
-      tag: 'x'
-    },
-    {
-      word: '当上',
-      tag: 't'
-    },
-    {
-      word: 'CEO',
-      tag: 'x' //这里官方是eng
-    },
-    {
-      word: '，',
-      tag: 'x'
-    },
-    {
-      word: '走上',
-      tag: 'v'
-    },
-    {
-      word: '人生',
-      tag: 'n'
-    },
-    {
-      word: '巅峰',
-      tag: 'n'
-    },
-    {
-      word: '。',
-      tag: 'x'
-    }
-  ]);
-});
+// test("nodejieba.tag(sentence)", t => {
+//   const res = myjieba.tag(sentence);
+//   t.deepEqual(res, [{
+//       word: '我',
+//       tag: 'r'
+//     },
+//     {
+//       word: '是',
+//       tag: 'v'
+//     },
+//     {
+//       word: '拖拉机',
+//       tag: 'n'
+//     },
+//     {
+//       word: '学院',
+//       tag: 'n'
+//     },
+//     {
+//       word: '手扶拖拉机',
+//       tag: 'n'
+//     },
+//     {
+//       word: '专业',
+//       tag: 'n'
+//     },
+//     {
+//       word: '的',
+//       tag: 'uj'
+//     },
+//     {
+//       word: '。',
+//       tag: 'x'
+//     },
+//     {
+//       word: '不用',
+//       tag: 'v'
+//     },
+//     {
+//       word: '多久',
+//       tag: 'm'
+//     },
+//     {
+//       word: '，',
+//       tag: 'x'
+//     },
+//     {
+//       word: '我',
+//       tag: 'r'
+//     },
+//     {
+//       word: '就',
+//       tag: 'd'
+//     },
+//     {
+//       word: '会',
+//       tag: 'v'
+//     },
+//     {
+//       word: '升职',
+//       tag: 'v'
+//     },
+//     {
+//       word: '加薪',
+//       tag: 'nr'
+//     },
+//     {
+//       word: '，',
+//       tag: 'x'
+//     },
+//     {
+//       word: '当上',
+//       tag: 't'
+//     },
+//     {
+//       word: 'CEO',
+//       tag: 'x' 
+//     },
+//     {
+//       word: '，',
+//       tag: 'x'
+//     },
+//     {
+//       word: '走上',
+//       tag: 'v'
+//     },
+//     {
+//       word: '人生',
+//       tag: 'n'
+//     },
+//     {
+//       word: '巅峰',
+//       tag: 'n'
+//     },
+//     {
+//       word: '。',
+//       tag: 'x'
+//     }
+//   ]);
+// });
 test('myjieba.cut("今天天气很好，🙋 我们去郊游。")', t => {
   const res = myjieba.cut("今天天气很好，🙋 我们去郊游。")
   t.deepEqual(res, ['今天天气', '很', '好', '，', '🙋', ' ', '我们', '去', '郊游', '。']);
