@@ -1,11 +1,11 @@
 const profiler = require('v8-profiler-node8');
-const Myjieba = require('../index')
-
-const myjieba = new Myjieba()
+const fs = require('fs');
+const Cut = require('../index')
+var sentence = "我是拖拉机学院手扶拖拉机专业的。不用多久，我就会升职加薪，当上CEO，走上人生巅峰。";
 
 profiler.startProfiling('1', true);
-myjieba = new Cut()
-myjieba.tag(sentence);
+const myjieba = new Cut()
+myjieba.cut(sentence);
 
 var profile1 = profiler.stopProfiling();
 profile1.export(function(error, result) {
