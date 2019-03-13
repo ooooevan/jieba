@@ -1,5 +1,3 @@
-const Node = require('./node');
-
 class Dict {
   constructor() {
     this.root = {};
