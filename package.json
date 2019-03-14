@@ -1,6 +1,6 @@
 {
   "name": "ooooevan-jieba",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "test my jieba module",
   "main": "index.js",
   "scripts": {
