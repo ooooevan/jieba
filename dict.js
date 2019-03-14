@@ -1,6 +1,6 @@
 class Dict {
   constructor() {
-    this.root = {};
+    this.root = [];
     this.total = 0;
   }
   insertArr(arr) {
