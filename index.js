@@ -222,6 +222,7 @@ class Cut {
     }
   }
   getDag(str) {
+    this.checkLoad()
     const DAG = {}
     let wNode;
     for (let i = 0, len = str.length; i < len; i++) {
@@ -398,9 +399,18 @@ class Cut {
   }
 }
 
+// var one = process.memoryUsage()
+// var start = new Date()
+
 // var sentence = "我是拖拉机学院手扶拖拉机专业的。不用多久，我就会升职加薪，当上CEO，走上人生巅峰。";
-// myjieba = new Cut()
-// const res = myjieba.tag(sentence);
-// console.log(res)
+// const myjieba = new Cut()
+// const res = myjieba.cut(sentence);
+// // console.log(res)
+
+// var two = process.memoryUsage()
+// var usage = two.heapUsed - one.heapUsed
+
+// console.log(usage)
+// console.log(new Date() - start)
 
 module.exports = Cut

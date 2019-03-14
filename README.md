@@ -1,11 +1,21 @@
 ## 学习jieba分词
 
-实现了cut、cutHMM、cutAll、cutForSearch等方法
-
-
-存在的问题：代码还没整理、cutHMM太慢未优化(字符串太长时构建成树耗时，内存不足)等等
-
 参考：[https://github.com/ustcdane/annotated_jieba](https://github.com/ustcdane/annotated_jieba)
+
+```js
+const Jieba = require('ooooevan-jieba')
+const jieba = new Jieba()
+const result = jieba.cut('',{
+    cutAll: false,
+    dag: false,
+    hmm: true,
+    cutForSearch: false
+  })
+
+```
+
+实现了cut、cutHMM、cutAll、cutForSearch、getDag、tag、load方法
+
 
 ### 过程中的问题
 
@@ -14,32 +24,43 @@
 如: 
 ```js
 str = '到MI京研大厦'
+// nodejieba的结果
 nodejieba.cut(str); // ['到', 'M', 'I', '京', '研', '大厦']
 nodejieba.cut(str, true); // ['到', 'MI', '京研', '大厦']
 nodejieba.cutHMM(str);  // [ '到', 'MI', '京', '研大厦' ]
+// 自己的结果
 cut(str, true);   // [ '到M', 'I京', '研', '大厦' ]
 hmm(str);  // ['到M', 'I京', '研大', '厦']
 ```
 
-通过调试看源码，发现了hmm的两个正则匹配。中英文要区分
+通过调试看源码，发现了hmm用到了很多的正则匹配。
 ```js
-/([\u4E00-\u9FD5]+)/;   //将中文和非中文分开
-/([a-zA-Z0-9]+(?:\.\d+)?%?)/; //匹配英文数字及其他符号，可以将英文数字和其他字符分开，后面的%符号挺奇怪的，是想匹配百分数吗
-/([a-zA-Z0-9]+(?:\.\d)?)|([0-9]+(?:\.\d)?%?)/;  //匹配百分数，数字才能匹配百分号
+const re_userdict = /^(.+?)( [0-9]+)?( [a-z]+)?$/
+const re_eng = /[a-zA-Z0-9]/
+const re_han_default = /([\u4E00-\u9FD5a-zA-Z0-9+#&\._%]+)/
+const re_skip_default = /(\r\n|\s)/
+const re_han_cut_all = /([\u4E00-\u9FD5]+)/
+const re_skip_cut_all = /[^a-zA-Z0-9+#\n]/
+
+const han_reg = /([\u4E00-\u9FD5]+)/;
+const seg_reg = /([a-zA-Z0-9]+(?:\.\d)?)|([0-9]+(?:\.\d)?%?)/;
 ```
-在hmm函数添加了相关代码后，上面的问题解决了
+大致策略是先将中文和非中文分开，对于非中文，再区分普通的英文数字和其他特殊字符
+使用了一些正则，就能得到一致的结果
+
 
 #### 2、hmm函数构建根据BEMS构建树未优化，耗时且太长会导致内存不足
 
-通过比较，我发现是我和官方实现的方式不同，我的方式是：
+在之前，我将用户输入构建构建成树时非常繁琐复杂，浪费很多内存，容易造成内存不足
 
 ```js
+var str = "我是拖拉机学院手扶拖拉机专业的。不用多久，我就会升职加薪，当上CEO，走上人生巅峰。";
 const treeObj = getWordTree(str); //将字符串转为一个大对象，里面包含需要的字符节点相关数据
 var treeArr = recursion(treeObj);  //将大对象转为同等的二维数组，里面有2**n个数组，也就是2**n个不同路径
 var conarr = getAppropriate(treeArr); //从2**n个数组中选出最优的一个数组
 ```
 
-这种方法很直白，是我根据hmm算法描述写的，有太多不需要的数据，导致内存可能爆掉。是`2**n`个而不是`4**n`，因为每个字符在所在位置都只有两种类型而不是四种，如开头字符只可能是B或S，不能是E或M。
+这种方法很直白，是我根据hmm算法描述写的，有太多不需要的数据，导致内存可能爆掉。是`2**n`个而不是`4**n`，因为每个字符在所在位置都只有两种类型而不是四种。如开头字符只可能是B或S，不能是E或M。
 
 ```js
 str = '程序员'
@@ -79,9 +100,7 @@ conarr = [ //最优路径
 ]
 
 ```
-在测试较长字符串时，会内存不足。因为这个过程存储了太多无用变量
-
-修改为官方的方式，思路如下小
+导致内存不足后，修改为官方的方式，思路如下小
 
 ```js
 str = '程序员'
@@ -91,13 +110,14 @@ const prevTrans = {   //上一个状态可能类型
   M: [B, M],
   S: [E, S]
 }
-
+// 通过动态规划计算下面结果
 "'程'的概率" = {B:'', E:'', M:'', S:''}
 "'序'的概率" = {B:'', E:'', M:'', S:''}
 "'员'的概率" = {B:'', E:'', M:'', S:''}
 /*
 开头字符概率是确定的，后一个要根据前一个来确定。如'序'(有BEMS)中的B，和前一个一起的可能类型组合是：EB或SB，则选择计算两种的较高概率的一种。
-所以概率表保存的是组合的概率，每个字符的概率都基于前n个字符的概率。这里和cut函数最大切分组合类似，只是那里是从后往前，这里是从前往后的
+所以概率表保存的是组合的概率，每个字符的概率都基于前n个字符的概率。这里和cut函数最大切分组合类似，只是那里是从后往前，这里是从前往后的*/
+/*
 "'程'的概率" = {B:'', E:'', M:'', S:''} //保存字符'程'的不同类型的概率
 "'序'的概率" = {B:'', E:'', M:'', S:''} //保存字符'程序'的不同类型的概率
 "'员'的概率" = {B:'', E:'', M:'', S:''} //保存字符'程序员'的不同类型的概率
@@ -111,27 +131,38 @@ path = {B: "BEB", E: "BME", M: "BMM", S: "BES"}
 
 改成官方的方式，果然好多了，再也不怕用太多内存了
 
-#### 3、自定义字典的路径问题
+#### 3、不用Trie，改用数组
 
-没有测试时，处理路径是`path.resolve(__dirname, './xx.utf8')`，直接写也行，因为还不用考虑不同路径
-当将它单独为一个模块时，用户可以调用`load`方法使用自定义字典，此时找不到自定义字典，因为路径还是相对模块自身的
-若在test目录执行`test.js`，能找到文件正常执行，在其他目录都找不到文件无法使用
+https://blog.csdn.net/daniel_ustc/article/details/48223135
 
-```
-├jieba
-│  ├─dict  #存储默认字典
-│  ├─test
-│  │  │─doc
-│  │  │─test.js  #测试位置
-│  │  └─user.dict.utf8  #字典文件
-│  ├─index.js  #模块位置
-│
+用process.memoryUsage测试用掉的堆和时间
 
-
-初步了解了一下，好像用path模块也不能解决的，因为它是相对自身文件的，在模块内部无法知道用户文件的相对路径，需要借助node模块打包相关方案解决
-
-
-
+结构如下：
+```js
+// 如：北京大学
+['北':17860,'北京':34488,'北京大':0,'北京大学':'2053'/*...（其他字典）*/]
 
 ```
 
+测试性能：
+```js
+var one = process.memoryUsage()
+var start = new Date()
+
+var sentence = "我是拖拉机学院手扶拖拉机专业的。不用多久，我就会升职加薪，当上CEO，走上人生巅峰。";
+const myjieba = new Cut()
+const res = myjieba.cut(sentence);
+
+var two = process.memoryUsage()
+var usage = two.heapUsed - one.heapUsed
+console.log(usage)
+console.log(new Date() - start)
+```
+
+| 时间   | Trie结构     | 数组        |
+| ------ | ------------ | ----------- |
+| win10  | (127M, 1.1s) | (90M, 0.8s) |
+| Ubuntu | (130M, 1.4s) | (75M, 1s)   |
+
+分别用我的win10和虚拟机测试，这里只表现相对情况。结果可见，用数组明显比用Trie结构更好
+Trie结构的在`noTrie`分支，且没有保存词性信息，相关函数无效
