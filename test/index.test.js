@@ -249,7 +249,7 @@ test("nodejieba.tag(sentence)", t => {
     },
     {
       word: 'CEO',
-      tag: 'x' //这里官方是eng
+      tag: 'x' 
     },
     {
       word: '，',
