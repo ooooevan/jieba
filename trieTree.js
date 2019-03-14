@@ -2,7 +2,7 @@ const Node = require('./node');
 
 class standardTrie {
   constructor() {
-    this.root = new Node('');
+    this.root = new Node();
     this.total = 0;
   }
   insertArr(arr) {

@@ -1,10 +1,8 @@
 // https://blog.csdn.net/fuyzh1024/article/details/7933554
 
 class TrieNode {
-  constructor(key) {
-    this.key = key //字
+  constructor() {
     this.children = {}
-    this.wordCount = 0;
     this.bound = false; //是否可为末尾
   }
   add(key, node) {
@@ -30,7 +28,7 @@ class TrieNode {
   addWord(word = '', number, tag) {
     let tempNode = this;
     word.split('').forEach(w => {
-      const sub = tempNode.add(w, new TrieNode(w));
+      const sub = tempNode.add(w, new TrieNode());
       tempNode.wordCount += 1
       tempNode = sub
     })
