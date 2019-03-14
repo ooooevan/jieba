@@ -1,3 +1,5 @@
+const Node = require('./node')
+
 class Dict {
   constructor() {
     this.root = [];
@@ -21,15 +23,9 @@ class Dict {
         this.root[w] = 0
       }
       if (i === len - 1) {
-        this.root[w] = number
+        this.root[w] = new Node(number, tag)
       }
     }
-  }
-  getTree() {
-    return this.root;
-  }
-  findWord(w) {
-    return this.root.findWord(w);
   }
 }
 

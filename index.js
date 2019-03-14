@@ -1,5 +1,4 @@
 const fs = require('fs');
-const path = require('path');
 const Dict = require('./dict');
 
 
@@ -32,7 +31,7 @@ class Cut {
     this.idfDictPath = options.idfDict
     this.stopWordDictPath = options.stopWordDict
 
-    this.dict = this._getTree();
+    this.dict = this._getDict();
     this._initProbability();
 
     this._loaded = true
@@ -95,7 +94,7 @@ class Cut {
       })
     })
   }
-  _getTree() {
+  _getDict() {
     const dictString = fs.readFileSync(this.dictPath).toString();
     const dictlineArr = dictString.split('\n').filter(s => s);
     const userDictString = fs.readFileSync(this.userDictPath).toString();
@@ -153,7 +152,11 @@ class Cut {
         for (let j = 0, len = arr.length; j < len; j++) {
           let _i = arr[j];
           let _w = str.slice(i, _i + 1);
-          const num = this.dict.root[_w] < 1 ? undefined : this.dict.root[_w];
+          const _node = this.dict.root[_w]
+          let num
+          if(typeof _node === 'object'){ //有这个词为object，有这个前缀为0，否则为undefined
+            num = _node.number
+          }
           let number = (log(num) || 1) - log(this.dict.total) + route[_i + 1]['number'];
           temp.push({
             number,
@@ -201,14 +204,14 @@ class Cut {
             for (let i = 0; i < len - 1; i++) {
               const _it = it.slice(i, i + 2)
               const _temp = this.dict.root[_it]
-              if (_temp > 0) searchResult.push(_it);
+              if (typeof _temp === 'object') searchResult.push(_it);
             }
           }
           if (len > 3) {
             for (let i = 0; i < len - 1; i++) {
               const _it = it.slice(i, i + 3)
               const _temp = this.dict.root[_it]
-              if (_temp >0) searchResult.push(_it);
+              if (typeof _temp === 'object') searchResult.push(_it);
             }
           }
           searchResult.push(it);
@@ -230,20 +233,19 @@ class Cut {
       if (!DAG[i]) {
         DAG[i] = [i] //每个词都可以是single
       }
-      if (wNode < 1) {
+      if (typeof wNode !== 'object') {
         // 遇到库中没有的特殊字符，或空格
         continue;
       }
       for (let j = i + 1; j < len; j++) {
         const _W = str.slice(i, j + 1);
         const _wNode = this.dict.root[_W]
-        if (_wNode > 0) {
+        if (typeof _wNode === 'object') {
           DAG[i].push(j)
         } else if (_wNode === undefined) {
           break;
         }
       }
-
     }
     return DAG;
   }
@@ -392,7 +394,7 @@ class Cut {
   }
 }
 // var one= process.memoryUsage()
-
+// var start = new Date()
 // var sentence = "我是拖拉机学院手扶拖拉机专业的。不用多久，我就会升职加薪，当上CEO，走上人生巅峰。";
 // const myjieba = new Cut()
 // const res = myjieba.cut(sentence);
@@ -400,5 +402,6 @@ class Cut {
 
 // var two = process.memoryUsage()
 // console.log(two.heapUsed - one.heapUsed)
+// console.log(new Date() - start)
 
 module.exports = Cut
