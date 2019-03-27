@@ -190,3 +190,4 @@ console.log(new Date() - start)
 
 [https://www.cnblogs.com/justinh/p/7716421.html](https://www.cnblogs.com/justinh/p/7716421.html)<br>
 文本预测（代码提示）：前缀一致，后面的都是可能出现的结果
+`test/prompt.html`

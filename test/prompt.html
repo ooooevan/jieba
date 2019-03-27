@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+    #prompt {
+      position: absolute;
+      left: 30px;
+      top: 20px;
+      cursor: default;
+      display: none;
+    }
+
+    #prompt ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      border: 1px solid #ccc;
+      min-width: 200px;
+      width: auto;
+      overflow: visible;
+      padding: 0 5px;
+    }
+
+    #prompt ul li:hover {
+      background: #f7f5f5;
+    }
+
+    #prompt ul li.hover {
+      background: rgb(33, 150, 243);
+      color: white
+    }
+  </style>
+</head>
+
+<body>
+  <textarea autofocus name="" id="textarea" cols="30" rows="10"></textarea>
+
+  <dic id='prompt'>
+    <ul>
+    </ul>
+    </div>
+    <script>
+      class Trie {
+        constructor() {
+          this.root = new Node();
+        }
+        insertArr(arr) {
+          arr.forEach(word => {
+            this.insert(word)
+          })
+        }
+        insert(word) {
+          this.root.addWord(word);
+        }
+        getTree() {
+          return this.root;
+        }
+        find(w) {
+          return this.root.find(w);
+        }
+        findWord(w) {
+          return this.root.findWord(w);
+        }
+      }
+
+      class Node {
+        constructor() {
+          this.children = {}
+        }
+        add(key, node) {
+          if (!this.children[key]) {
+            this.children[key] = node;
+          }
+          return this.children[key];
+        }
+        find(key) {
+          return this.children[key];
+        }
+        findWord(w) {
+          let temp = this
+          for (let i = 0, len = w.length; i < len; i++) {
+            const _w = w[i];
+            temp = temp.find(_w);
+            if (!temp) {
+              return null;
+            }
+          }
+          return temp;
+        }
+        addWord(word = '') {
+          let tempNode = this;
+          word.split('').forEach(w => {
+            const sub = tempNode.add(w, new Node());
+            tempNode = sub
+          })
+          tempNode.bound = true
+          // 最后成词，记录频数和词性
+        }
+      }
+    </script>
+
+    <script>
+      const object = ["Object", "Array", "Date", "RegExp", "Function", "Boolean", "Number", "String", 'Global,', 'Math',
+        'Window', 'Document'
+      ]
+
+      /*static和property是所有实例和静态属性方法*/
+      const static = ["toString", "toLocaleString", "valueOf", "assign"]
+      const property = ["constructor", "prototype"]
+
+      const objInstance = ["assign", "create", "defineProperty", "defineProperties", "seal", "freeze",
+        "getOwnPropertyDescriptor", "getOwnPropertyNames", "getPrototypeOf", "setPrototypeOf", "keys",
+        "preventExtensions"
+      ]
+      const arrProperty = ['length']
+      const arrInstance = ['concat', 'join', 'push', 'pop', 'shift', 'unshift', 'reverse', 'sort', 'slice', 'map',
+        'filter', 'some', 'every', 'forEach', 'reduce'
+      ]
+      const regProperty = ['global', 'ignoreCase', 'lastIndex']
+      const regInstance = ['compile', 'exec', 'test']
+      const funcProperty = ['arguments']
+      const numInstance = ['toLocaleString', 'valueOf']
+      const strInstance = ['charCodeAt', 'indexOf', 'lastIndexOf', 'match', 'replace', 'search', 'toLowerCase',
+        'concat',
+        'split', 'substr', 'substring'
+      ]
+      const gloProperty = ['Infinity', 'NaN', 'Undefined']
+      const gloInstance = ['encodeURI', 'encodeURIComponent', 'parseInt', 'parseFloat', 'isFinite', 'isNaN']
+      const jsonStatic = ['parse', 'stringify']
+
+      const data = object.concat(static).concat(property).concat(objInstance)
+        .concat(arrProperty).concat(arrProperty).concat(arrInstance).concat(regProperty).concat(regInstance)
+        .concat(funcProperty).concat(numInstance).concat(strInstance).concat(gloProperty).concat(gloInstance).concat(
+          jsonStatic)
+      const trie = new Trie()
+      trie.insertArr(data)
+      const currentReg = /[ .,=]+/
+      const textarea = document.getElementById('textarea')
+      const promptDom = document.getElementById('prompt')
+      let listener, date
+      textarea.addEventListener('keyup', e => {
+        e.preventDefault()
+        /*
+          监听的功能键keyCode
+          13：enter
+          27：ESC
+          37： left
+          38：up
+          39：right
+          40：down
+        */
+        const keyArr = [13, 27, 37, 38, 39, 40]
+        let prefixArr = textarea.value.split(currentReg)
+        const prefix = prefixArr[prefixArr.length - 1]
+        if (keyArr.find(x => x === e.keyCode) && inPrompt(promptDom)) {
+          let text = choosePrompt(promptDom, e.keyCode)
+          if (text) {
+            let value = textarea.value
+            clearPrompt(promptDom)
+            textarea.value = value.replace(new RegExp('(' + prefix + ')$'), text)
+          }
+          return false
+        } else {
+          throttle(prompt.bind(this, prefix, e), 100)
+        }
+      })
+
+      function prompt(prefix, e) {
+        if (!prefix) {
+          clearPrompt(promptDom)
+          return
+        }
+        const node = trie.findWord(prefix)
+        let wordArr = []
+        if (node) {
+          let suffixArr = getPrompt(node)
+          suffixArr.forEach(arr => {
+            wordArr = wordArr.concat(prefix + arr.join(''))
+          })
+          clearPrompt(promptDom)
+          if (wordArr.length > 0) {
+            showPrompt(wordArr, promptDom)
+          }
+        } else {
+          clearPrompt(promptDom)
+        }
+      }
+
+      function inPrompt(dom) {
+        if (dom.style.display === 'none') {
+          return false
+        }
+        return true
+      }
+
+      function choosePrompt(dom, key) {
+        const ul = dom.getElementsByTagName('ul')[0]
+        const len = ul.getElementsByTagName('li').length
+        switch (key) {
+          case 39:
+          case 13:
+            // 选择选中的
+            li = dom.getElementsByClassName('hover')[0]
+            return li && li.innerText
+          case 27:
+          case 37:
+            // 取消提示
+            clearPrompt(dom)
+            break
+          case 38:
+            // 上
+            li = dom.getElementsByClassName('hover')[0]
+            li.className = li.className.replace(' hover', '')
+            const prevLi = li.previousSibling instanceof HTMLLIElement ? li.previousSibling : ul.lastElementChild
+            prevLi.className += ' hover'
+            break
+          case 40:
+            // 下
+            li = dom.getElementsByClassName('hover')[0]
+            li.className = li.className.replace(' hover', '')
+            const nextLi = li.nextElementSibling instanceof HTMLLIElement ? li.nextElementSibling : ul.firstElementChild
+
+            nextLi.className += ' hover'
+            break
+          default:
+            break
+        }
+      }
+
+      function clearPrompt(dom) {
+        dom.style.display = 'none'
+        let lis = dom.getElementsByTagName('ul')[0].getElementsByTagName('li')
+        for (let i = 0, len = lis.length; i < len; i++) {
+          lis[0].remove()
+        }
+      }
+
+      function showPrompt(wordArr, dom) {
+        const ul = dom.getElementsByTagName('ul')[0]
+        wordArr.forEach((w, ind) => {
+          let li = document.createElement('li')
+          if (ind === 0) {
+            li.className = li.className + ' hover'
+          }
+          li.setAttribute('index', ind)
+          li.innerText = w
+          ul.appendChild(li)
+        })
+        dom.style.display = 'block'
+      }
+
+      function getPrompt(node) {
+        const ll = []
+
+        function _recursion(obj, initArr) {
+          Object.keys(obj.children).forEach(key => {
+            var temp = obj.children[key];
+            var currentArr = initArr.concat(key)
+            if (Object.keys(temp.children).length === 0) {
+              ll.push(currentArr)
+            } else {
+              _recursion(temp, currentArr);
+            }
+          })
+        }
+        _recursion(node, [])
+        return ll
+      }
+      const throttle = (function (func, sec) {
+        let start = new Date()
+        let timer
+        return function _throttle(func, sec) {
+          const now = new Date()
+          if (now - start >= sec) {
+            timer && clearTimeout(timer)
+            start = now
+            timer = setTimeout(func, sec)
+          }
+        }
+      })()
+    </script>
+</body>
+
+</html>
